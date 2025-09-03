@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ejercicios de español - CM</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .quiz-wrapper {
+            max-width: 950px !important;
+            margin: auto;
+        }
+        /* Usa un enfoque más robusto para los márgenes en móvil */
+        @media (max-width: 767px) {
+            .quiz-wrapper {
+                max-width: calc(100% - 20px) !important;
+                margin: 0 auto !important;
+            }
+        }
+        .mic-button {
+            transition: all 0.2s ease-in-out;
+        }
+        .mic-button:hover {
+            transform: scale(1.05);
+        }
+        .recording-pulse {
+            animation: pulse 1.5s infinite;
+        }
+        .repeat-bounce {
+            animation: bounce-repeat 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes bounce-repeat {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class='quiz-wrapper bg-white p-8 w-full text-center flex flex-col justify-between border border-gray-300 md:rounded-xl md:shadow-2xl'>
+        <div>
+            <br>
+            <h2 class="text-2xl font-bold mb-4" id="quiz-title">EJERCICIO DE ESPAÑOL - 27 ago 2025</h2> <!-- CAMBIA ESTO CADA SEMANA 🟡🟡🟡🟡🟡🟡🟡 -->
+            
+            <p><strong>Clic, habla y espera el resultado</strong><br><span class='text-red-600'>↓ Pronuncia esta frase ↓</span><br><br></p>
+            
+            <div id='question-container'>
+                <p id='verb-question' class='text-[24px] font-extrabold text-blue-600 mb-4 leading-[1.60]'>Formato de la pregunta</p>
+            </div>
+
+            <div class='flex items-center justify-center space-x-4 mb-6' id='button-container'>
+                <button id='mic-button' class='mic-button px-6 py-3 rounded-full bg-red-600 text-white font-bold shadow-lg transition-colors duration-200 focus:outline-none focus:ring-4 focus:ring-blue-300 flex items-center gap-2'>
+                    <span>Click & Habla</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <div id='feedback-message' class='h-6 mt-4'>
+                <!-- Los mensajes de feedback se mostrarán aquí -->
+            </div>
+            
+            <div class='mb-6'>
+                <p id='recognized-text' class='text-[24px] text-gray-700 font-semibold min-w-0 break-words h-auto'></p>
+            </div>
+        </div>
+
+        <button id='next-button' class='mt-8 px-6 py-3 bg-gray-200 text-white font-bold rounded-full hover:bg-gray-300 transition-colors duration-200 focus:outline-none'>Siguiente ></button>
+
+        <!-- Contenedor para el modal de error -->
+        <div id='error-modal' class='fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50'>
+            <div class='bg-white p-6 rounded-lg shadow-xl text-center max-w-md mx-4'>
+                <h3 class='text-xl font-bold text-red-600 mb-4'>Error Detectado</h3>
+                <div id='error-details' class='text-gray-700 mb-6 text-left bg-gray-100 p-3 rounded text-sm'>
+                    <!-- Los detalles del error aparecerán aquí -->
+                </div>
+                <p class='text-sm text-gray-600 mb-4'>Por favor, revisa la configuración de tu micrófono y permisos del navegador.</p>
+                <button id='close-modal' class='px-4 py-2 bg-red-600 text-white font-bold rounded-full hover:bg-red-700 transition-colors'>Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ===== CONFIGURACIÓN DEL QUIZ =====
+            const QUIZ_CONFIG = {
+                titulo: "Claudia Maschio - Clase 03", // CAMBIA ESTO CADA SEMANA 🟡🟡🟡🟡🟡🟡🟡
+                fecha: "27 de agosto de 2025",                  // CAMBIA ESTO CADA SEMANA 🟡🟡🟡🟡🟡🟡🟡
+				googleFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLScKfHfxZjiADQacWmRK8Rh4oE8gGFWTTZDuYIc_FzeIM0THog/formResponse',
+				entryId: 'entry.876698263'
+            };
+            
+            // Función para registrar actividad del quiz
+            function registrarActividad(accion) {
+                const timestamp = new Date().toLocaleString('es-ES');
+                const dispositivo = /Mobile|Android|iPhone|iPad/.test(navigator.userAgent) ? 'Móvil' : 'Escritorio';
+                const navegador = navigator.userAgent.includes('Chrome') ? 'Chrome' : 
+                                 navigator.userAgent.includes('Firefox') ? 'Firefox' : 
+                                 navigator.userAgent.includes('Safari') ? 'Safari' : 'Otro';
+                
+                const mensaje = `${QUIZ_CONFIG.titulo} | ${accion} | ${timestamp} | ${dispositivo} | ${navegador}`;
+                
+                if (QUIZ_CONFIG.googleFormUrl && QUIZ_CONFIG.entryId) {
+                    const formData = new FormData();
+                    formData.append(QUIZ_CONFIG.entryId, mensaje);
+                    
+                    fetch(QUIZ_CONFIG.googleFormUrl, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        body: formData
+                    }).catch(() => {
+                        console.log('Registro no enviado');
+                    });
+                }
+            }
+
+            // Lista de preguntas y respuestas 🟡🟡🟡🟡🟡🟡🟡🟡🟡
+            const verbExercises = [
+				
+			  {
+			    "question": "Juan es camarero.",
+			    "correctAnswers": [
+			      "Juan es camarero."
+			    ]
+			  },
+			  {
+			    "question": "Gloria es mexicana.",
+			    "correctAnswers": [
+			      "Gloria es mexicana."
+			    ]
+			  },
+			  {
+			    "question": "¿De dónde es Jorge?",
+			    "correctAnswers": [
+			      "¿De dónde es Jorge?"
+			    ]
+			  },
+			  {
+			    "question": "Gerardo es venezolano.",
+			    "correctAnswers": [
+			      "Gerardo es venezolano."
+			    ]
+			  },
+			  {
+			    "question": "Sonia es peruana y José es ecuatoriano.",
+			    "correctAnswers": [
+			      "Sonia es peruana y José es ecuatoriano."
+			    ]
+			  },
+			  {
+			    "question": "El presidente de Venezuela se llamaba Hugo Chávez.",
+			    "correctAnswers": [
+			      "El presidente de Venezuela se llamaba Hugo Chávez."
+			    ]
+			  },
+			  {
+			    "question": "¿Quién es el presidente de Guatemala?",
+			    "correctAnswers": [
+			      "¿Quién es el presidente de Guatemala?"
+			    ]
+			  },
+			  {
+			    "question": "Roberto es jubilado.",
+			    "correctAnswers": [
+			      "Roberto es jubilado."
+			    ]
+			  },
+			  {
+			    "question": "¿Sandra es española o portuguesa?",
+			    "correctAnswers": [
+			      "¿Sandra es española o portuguesa?"
+			    ]
+			  },
+			  {
+			    "question": "Berlín es la capital de Alemania.",
+			    "correctAnswers": [
+			      "Berlín es la capital de Alemania."
+			    ]
+			  },
+			  {
+			    "question": "Mi amigo Pedro es abogado.",
+			    "correctAnswers": [
+			      "Mi amigo Pedro es abogado."
+			    ]
+			  },
+			  {
+			    "question": "¿Ella es inglesa o canadiense?",
+			    "correctAnswers": [
+			      "¿Ella es inglesa o canadiense?"
+			    ]
+			  },
+			  {
+			    "question": "No soy arquitecto.",
+			    "correctAnswers": [
+			      "No soy arquitecto."
+			    ]
+			  },
+			  {
+			    "question": "No soy ingeniero.",
+			    "correctAnswers": [
+			      "No soy ingeniero."
+			    ]
+			  },
+			  {
+			    "question": "Soy profesor y escritor.",
+			    "correctAnswers": [
+			      "Soy profesor y escritor."
+			    ]
+			  },
+			  {
+			    "question": "¿Alberto es mexicano o argentino?",
+			    "correctAnswers": [
+			      "¿Alberto es mexicano o argentino?"
+			    ]
+			  },
+			  {
+			    "question": "Yo también soy italiana.",
+			    "correctAnswers": [
+			      "Yo también soy italiana."
+			    ]
+			  }
+				
+            ];
+
+            let currentExerciseIndex = 0;
+            const verbQuestionElement = document.getElementById('verb-question');
+            const micButton = document.getElementById('mic-button');
+            const recognizedTextElement = document.getElementById('recognized-text');
+            const feedbackMessageElement = document.getElementById('feedback-message');
+            const nextButton = document.getElementById('next-button');
+            const errorModal = document.getElementById('error-modal');
+            const closeModalButton = document.getElementById('close-modal');
+
+            let recognition = null;
+            let isRecognizing = false;
+
+            // Sonidos de audio simples usando Web Audio API
+            function playBeep(frequency = 800, duration = 200) {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + duration / 1000);
+                } catch (e) {
+                    console.log('Audio no disponible');
+                }
+            }
+
+            function playClickSound() {
+                playBeep(600, 150);
+            }
+
+            function playCorrectSound() {
+                playBeep(800, 300);
+                setTimeout(() => playBeep(1000, 300), 150);
+            }
+
+            function playErrorSound() {
+                playBeep(300, 500);
+            }
+
+            function playFinalSound() {
+                playBeep(800, 200);
+                setTimeout(() => playBeep(1000, 200), 200);
+                setTimeout(() => playBeep(1200, 300), 400);
+            }
+
+            // Inicia la API de reconocimiento de voz si está disponible
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+            if (SpeechRecognition) {
+                try {
+                    recognition = new SpeechRecognition();
+                    recognition.lang = 'es-ES'; // Establece el idioma a español
+                    recognition.interimResults = false;
+                    recognition.continuous = false;
+                } catch (error) {
+                    console.error('Error inicializando SpeechRecognition:', error);
+                    recognition = null;
+                }
+            } else {
+                console.error('SpeechRecognition no disponible en este navegador');
+            }
+
+            // Solo asignar eventos si recognition fue inicializado correctamente
+            if (recognition) {
+                // Maneja el resultado del reconocimiento de voz
+                recognition.onresult = (event) => {
+                    const speechResult = event.results[0][0].transcript;
+                    recognizedTextElement.textContent = speechResult;
+                    checkAnswer(speechResult);
+                };
+
+                // Maneja el final del reconocimiento
+                recognition.onend = () => {
+                    isRecognizing = false;
+                    micButton.classList.remove('bg-red-500', 'recording-pulse');
+                    micButton.classList.add('bg-red-600');
+                    micButton.disabled = false; // Habilita el botón al finalizar
+                    if (feedbackMessageElement.textContent !== '' && nextButton.textContent === 'Siguiente >') {
+                        micButton.innerHTML = `<span>Repite - Click</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                            </svg>`;
+                    }
+                };
+
+                // Maneja errores de reconocimiento
+                recognition.onerror = (event) => {
+                    isRecognizing = false;
+                    micButton.classList.remove('bg-red-500', 'recording-pulse');
+                    micButton.classList.add('bg-red-600');
+                    micButton.innerHTML = `<span>Click & Habla</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                        </svg>`;
+                    micButton.disabled = false;
+            
+                    // Mostrar error específico según el tipo
+                    if (event.error === 'not-allowed') {
+                        showErrorModal('permission_denied');
+                    } else {
+                        showErrorModal('recognition_error', event.error);
+                    }
+            
+                    console.error('Speech recognition error: ', event.error);
+                };
+            }
+            
+            // Función para barajar el array de ejercicios (Fisher-Yates shuffle)
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+
+            // Muestra la pregunta actual
+            function displayCurrentQuestion() {
+                // Actualizar el título del quiz
+                document.getElementById('quiz-title').textContent = `Clase del ${QUIZ_CONFIG.fecha}`;
+                
+                if (currentExerciseIndex < verbExercises.length) {
+                    verbQuestionElement.textContent = verbExercises[currentExerciseIndex].question;
+                    recognizedTextElement.textContent = '';
+                    recognizedTextElement.classList.remove('text-red-600', 'text-green-600');
+                    recognizedTextElement.classList.add('text-gray-700');
+                    feedbackMessageElement.textContent = '';
+                    nextButton.disabled = true; // Deshabilita el botón siguiente
+                    nextButton.classList.remove('bg-red-600', 'text-white', 'hover:bg-red-700', 'shadow-lg');
+                    nextButton.classList.add('bg-gray-200', 'text-white', 'hover:bg-gray-300', 'opacity-50', 'cursor-not-allowed');
+                    nextButton.textContent = 'Siguiente >';
+                    micButton.classList.remove('hidden', 'repeat-bounce'); // Quitar animación al mostrar nueva pregunta
+                    micButton.innerHTML = `<span>Click & Habla</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                        </svg>`;
+                    micButton.disabled = false; // Habilita el botón del micrófono
+                } else {
+                    // Fin del ejercicio - registrar completado
+                    registrarActividad('COMPLETADO');
+                    
+                    verbQuestionElement.innerHTML = '<span style="font-size: 2em;">🎉🥳</span><br>¡ENHORABUENA!<br>Has contestado correctamente<br>a todas las preguntas.';
+                    recognizedTextElement.textContent = '';
+                    feedbackMessageElement.textContent = '';
+                    micButton.classList.add('hidden');
+                    nextButton.classList.remove('bg-gray-200', 'text-gray-700', 'hover:bg-gray-300', 'opacity-50', 'cursor-not-allowed');
+                    nextButton.classList.add('bg-red-600', 'text-white', 'hover:bg-red-700', 'shadow-lg');
+                    nextButton.textContent = 'Repetir el ejercicio';
+                    nextButton.disabled = false;
+                    playFinalSound();
+                    
+                    nextButton.onclick = () => {
+                        currentExerciseIndex = 0;
+                        shuffleArray(verbExercises); // Baraja de nuevo al reiniciar
+                        displayCurrentQuestion();
+                        nextButton.onclick = null; // Reinicia el evento de clic
+                    };
+                }
+            }
+
+            // Verifica si la respuesta es correcta (modificado para múltiples respuestas)
+            function checkAnswer(userAnswer) {
+                const currentExercise = verbExercises[currentExerciseIndex];
+                
+                // Se limpia la respuesta del usuario
+                const cleanedUserAnswer = userAnswer
+                    .toLowerCase().trim()
+                    .replace(/[.?!,¿¡]/g, '')
+                    .replace(/\s+/g, ' ')
+                    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                
+                // Se verifica contra todas las respuestas correctas posibles
+                const isCorrect = currentExercise.correctAnswers.some(correctAnswer => {
+                    const cleanedCorrectAnswer = correctAnswer
+                        .toLowerCase().trim()
+                        .replace(/[.?!,¿¡]/g, '')
+                        .replace(/\s+/g, ' ')
+                        .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                    
+                    return cleanedUserAnswer === cleanedCorrectAnswer;
+                });
+                
+                // Comparación de la respuesta
+                if (isCorrect) {
+                    // Mostrar la respuesta correcta formateada
+                    recognizedTextElement.textContent = currentExercise.correctAnswers[0];
+                    recognizedTextElement.classList.remove('text-red-600');
+                    recognizedTextElement.classList.add('text-green-600');
+                    showFeedback('¡Correcto! ☺️', true);
+                    nextButton.disabled = false; // Habilita el botón siguiente
+                    nextButton.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                    nextButton.classList.add('bg-red-600', 'text-white', 'hover:bg-red-700', 'shadow-lg');
+                    nextButton.textContent = 'Siguiente >'; // Asegura que el botón vuelva a 'Siguiente >'
+                    micButton.classList.add('hidden');
+                    playCorrectSound();
+                } else {
+                    recognizedTextElement.classList.remove('text-gray-700', 'text-green-600');
+                    recognizedTextElement.classList.add('text-red-600');
+                    showFeedback('No entiendo, repite por favor. 😕', false);
+                    micButton.innerHTML = `<span>Repite - Click</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                        </svg>`;
+                    // Agregar animación de rebote al botón "Repite - Click" para que sea más obvio
+                    micButton.classList.add('repeat-bounce');
+                    nextButton.disabled = false;
+                    nextButton.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-200', 'text-gray-700', 'hover:bg-gray-300');
+                    nextButton.classList.add('bg-green-600', 'text-white', 'hover:bg-green-700', 'shadow-lg');
+                    nextButton.textContent = 'Ayuda';
+                    playErrorSound();
+                }
+            }
+
+            // Muestra el mensaje de retroalimentación
+            function showFeedback(message, isCorrect) {
+                feedbackMessageElement.textContent = message;
+                if (isCorrect) {
+                    feedbackMessageElement.className = 'text-green-600 font-bold';
+                } else {
+                    feedbackMessageElement.className = 'text-red-600 font-bold';
+                }
+            }
+
+            // Muestra el modal de error
+            function showErrorModal(errorType, errorDetails = '') {
+                const errorDetailsElement = document.getElementById('error-details');
+                const timestamp = new Date().toLocaleString('es-ES');
+        
+                let errorMessage = '';
+        
+                switch(errorType) {
+                    case 'no_speech_api':
+                        errorMessage = `❌ API de voz no disponible
+    🌐 Navegador: ${navigator.userAgent}
+    ⏰ Hora: ${timestamp}
+    📱 Dispositivo: ${/Mobile|Android|iPhone|iPad/.test(navigator.userAgent) ? 'Móvil' : 'Escritorio'}
+
+    Solución: Usa Chrome, Edge o Safari actualizado`;
+                        break;
+                
+                    case 'permission_denied':
+                        errorMessage = `🚫 Permisos de micrófono denegados
+    ⏰ Hora: ${timestamp}
+    📱 Dispositivo: ${/Mobile|Android|iPhone|iPad/.test(navigator.userAgent) ? 'Móvil' : 'Escritorio'}
+
+    Solución: Permite el acceso al micrófono en la configuración del navegador`;
+                        break;
+                
+                    case 'recognition_error':
+                        errorMessage = `⚠️ Error de reconocimiento de voz
+    🔍 Tipo: ${errorDetails}
+    ⏰ Hora: ${timestamp}
+    📱 Dispositivo: ${/Mobile|Android|iPhone|iPad/.test(navigator.userAgent) ? 'Móvil' : 'Escritorio'}
+
+    Prueba hablar más claro o verificar el micrófono`;
+                        break;
+                
+                    case 'start_error':
+                        errorMessage = `🔴 Error al iniciar reconocimiento
+    🔍 Detalles: ${errorDetails}
+    ⏰ Hora: ${timestamp}
+    📱 Dispositivo: ${/Mobile|Android|iPhone|iPad/.test(navigator.userAgent) ? 'Móvil' : 'Escritorio'}
+
+    Recarga la página e intenta de nuevo`;
+                        break;
+                
+                    default:
+                        errorMessage = `❓ Error desconocido
+    🔍 Detalles: ${errorDetails}
+    ⏰ Hora: ${timestamp}
+    📱 Dispositivo: ${/Mobile|Android|iPhone|iPad/.test(navigator.userAgent) ? 'Móvil' : 'Escritorio'}`;
+                }
+        
+                errorDetailsElement.textContent = errorMessage;
+                errorModal.classList.remove('hidden');
+                errorModal.classList.add('flex');
+            }
+
+            // ===== EVENTO DEL BOTÓN DEL MICRÓFONO (CON TRACKING) =====
+            micButton.addEventListener('click', () => {
+                if (!SpeechRecognition || !recognition) {
+                    showErrorModal('no_speech_api');
+                    return;
+                }
+                
+                if (isRecognizing) {
+                    recognition.stop();
+                } else {
+                    // Registrar inicio solo en la primera pregunta
+                    if (currentExerciseIndex === 0 && feedbackMessageElement.textContent === '') {
+                        registrarActividad('INICIADO');
+                    }
+                    
+                    try {
+                        recognition.start();
+                        isRecognizing = true;
+                        micButton.classList.remove('bg-red-600', 'repeat-bounce'); // Quitar la animación al hacer clic
+                        micButton.classList.add('bg-red-500', 'recording-pulse');
+                        micButton.disabled = true; // Deshabilita el botón
+                        micButton.textContent = 'HABLA - Estoy escuchando...';
+                        feedbackMessageElement.textContent = '';
+                        recognizedTextElement.textContent = '';
+                        recognizedTextElement.classList.remove('text-red-600', 'text-green-600');
+                        recognizedTextElement.classList.add('text-gray-700');
+                        playClickSound();
+                    } catch (e) {
+                        console.error('Error starting speech recognition: ', e);
+                        showErrorModal('start_error', e.message);
+                    }
+                }
+            });
+
+            // Función para activar automáticamente el micrófono
+            function autoStartRecognition() {
+                if (!SpeechRecognition || !recognition) {
+                    showErrorModal('no_speech_api');
+                    return;
+                }
+                
+                // Pequeño delay para que la interfaz se actualice primero
+                setTimeout(() => {
+                    try {
+                        recognition.start();
+                        isRecognizing = true;
+                        micButton.classList.remove('bg-red-600');
+                        micButton.classList.add('bg-red-500', 'recording-pulse');
+                        micButton.disabled = true; // Deshabilita el botón
+                        micButton.textContent = 'HABLA - Estoy escuchando...';
+                        playClickSound();
+                    } catch (e) {
+                        console.error('Error starting auto speech recognition: ', e);
+                        showErrorModal('start_error', `Auto-start: ${e.message}`);
+                        // Si hay error, deja el botón normal para que el usuario pueda hacer clic manualmente
+                        micButton.innerHTML = `<span>Click & Habla</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                            </svg>`;
+                    }
+                }, 500); // Delay de 500ms para una transición suave
+            }
+
+            // Evento para el botón siguiente/ayuda/repetir (modificado para mostrar múltiples opciones)
+            nextButton.addEventListener('click', () => {
+                if (nextButton.textContent === 'Ayuda') {
+                    const currentExercise = verbExercises[currentExerciseIndex];
+                    const helpText = currentExercise.correctAnswers.join(' / ');
+                    recognizedTextElement.textContent = helpText;
+                    recognizedTextElement.classList.remove('text-red-600');
+                    recognizedTextElement.classList.add('text-green-600');
+                    showFeedback('La respuesta correcta es:', true);
+                    micButton.classList.remove('hidden');
+                    micButton.innerHTML = `<span>Repite - Click</span>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                        </svg>`;
+                    nextButton.disabled = true;
+                    nextButton.classList.add('opacity-50', 'cursor-not-allowed');
+                } else if (nextButton.textContent === 'Siguiente >') {
+                    currentExerciseIndex++;
+                    displayCurrentQuestion();
+                    // Activar automáticamente el micrófono después de mostrar la nueva pregunta
+                    if (currentExerciseIndex < verbExercises.length) {
+                        autoStartRecognition();
+                    }
+                } else if (nextButton.textContent === 'Repetir el ejercicio') {
+                    currentExerciseIndex = 0;
+                    shuffleArray(verbExercises);
+                    displayCurrentQuestion();
+                    // NO activar automáticamente al reiniciar, dejar que el usuario haga clic manualmente
+                    // La primera pregunta es mejor que sea manual para dar tiempo al usuario
+                }
+            });
+
+            // Evento para cerrar el modal de error
+            closeModalButton.addEventListener('click', () => {
+                errorModal.classList.remove('flex');
+                errorModal.classList.add('hidden');
+            });
+            
+            // Inicia el ejercicio
+            shuffleArray(verbExercises); // Baraja la lista de ejercicios al inicio
+            displayCurrentQuestion();
+        });
+    </script>
+</body>
+</html>
