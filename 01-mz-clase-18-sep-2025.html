@@ -293,8 +293,8 @@
             let recognition = null;
             let isRecognizing = false;
 
-           	// Sonidos ultra suaves para quiz
-			function playSound(frequency, duration, volume = 0.04) {
+           		// Sonidos ultra suaves para quiz
+			function playSound(frequency, duration, volume = 0.05) {
 			    try {
 			        const ctx = new (window.AudioContext || window.webkitAudioContext)();
 			        const osc = ctx.createOscillator();
@@ -328,7 +328,7 @@
 			}
 
 			function playCorrectSound() {
-			    playSound(880, 200, 0.02);
+			    playSound(880, 200, 0.05);
 			}
 
 			function playErrorSound() {
@@ -338,9 +338,9 @@
 
 			function playFinalSound() {
 			    playSound(440, 200, 0.05);
-			    setTimeout(() => playSound(554, 200, 0.05), 150);
-			    setTimeout(() => playSound(659, 200, 0.05), 300);
-			    setTimeout(() => playSound(880, 400, 0.06), 450);
+			    setTimeout(() => playSound(554, 200, 0.08), 150);
+			    setTimeout(() => playSound(659, 200, 0.09), 300);
+			    setTimeout(() => playSound(880, 400, 0.10), 450);
 			}
 
             // Inicia la API de reconocimiento de voz si está disponible
