@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz: Infinitivo con Pronombre</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Modern Quiz Styles */
+        :root {
+            --primary-color: #e60000;
+            --primary-hover: #db1647;
+            --secondary-color: #53BEA1;
+            --secondary-hover: #e8be55;
+            --bg-body: #eaeff1;
+            --bg-card: #ffffff;
+            --text-dark: #232323;
+            --text-blue: #2973AE;
+            --success-color: #0b9663;
+            --error-color: #a31912;
+            --border-color: #dedede;
+            --shadow-card: 0 10px 30px rgba(0,0,0,0.08);
+            --radius-card: 20px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .quiz-container {
+            background-color: var(--bg-card);
+            max-width: 700px;
+            width: 100%;
+            margin: 20px auto;
+            padding: 40px;
+            text-align: center;
+            border-radius: var(--radius-card);
+            box-shadow: var(--shadow-card);
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease-out forwards; /* cambia la velocidad de la transición entre las slides */
+        }
+
+        .hero-image {
+            width: 100%;
+            margin-bottom: 25px;
+            overflow: hidden;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+			aspect-ratio: 16 / 9; /* Forzamos la proporción del contenedor */
+			background-color: #000; /* Fondo negro por si la imagen no carga */
+			
+			
+				position: relative;
+        }
+
+        .hero-image img, .hero-image iframe {
+            width: 100%;
+            height: 100%; 
+            display: block;
+            object-fit: cover; /* Evita que la imagen se deforme */
+            border: none;
+        }
+		
+		/* Animación de latido para el botón Play */
+		        @keyframes pulse-red {
+		            0% { transform: translate(-50%, -50%) scale(0.95); box-shadow: 0 0 0 0 rgba(230, 0, 0, 0.7); }
+		            70% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 15px rgba(230, 0, 0, 0); }
+		            100% { transform: translate(-50%, -50%) scale(0.95); box-shadow: 0 0 0 0 rgba(230, 0, 0, 0); }
+		        }
+				
+				
+				.play-button-overlay {
+				            position: absolute;
+				            top: 50%;
+				            left: 50%;
+				            transform: translate(-50%, -50%);
+				            background: rgba(230, 0, 0, 0.9);
+				            border-radius: 50%;
+				            width: 65px;
+				            height: 65px;
+				            display: flex;
+				            align-items: center;
+				            justify-content: center;
+				            animation: pulse-red 2s infinite;
+				            pointer-events: none; /* El clic pasa al contenedor padre */
+				        }	
+				
+				
+
+        .progress-container {
+            width: 100%;
+            background-color: #f0f0f0;
+            height: 8px;
+            border-radius: 10px;
+			margin-top: 0px;
+            margin-bottom: 0px;
+            overflow: hidden;
+            position: relative;
+        }
+		
+		.progress-info {
+		    display: flex;
+		    justify-content: space-between;
+		    width: 100%;
+		    font-size: 0.85rem;
+		    font-weight: 600;
+		    color: #888;
+		    margin-top: 30px;
+		    margin-bottom: 8px;
+		    padding: 0 2px;
+		    text-transform: uppercase;
+		    letter-spacing: 1px;
+		}
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--secondary-color);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .start-title {
+            border-bottom: 2px dashed var(--border-color);
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+            font-weight: 800;
+            font-size: 1.6rem;
+            color: var(--primary-color);
+        }
+
+        .start-content {
+            margin: 20px 0;
+            font-size: 1.1rem;
+        }
+
+        .question-title {
+            font-size: 1.3rem;
+            margin: 20px 0 30px 0;
+            line-height: 1.8;
+        }
+
+        .verb-highlight {
+            color: var(--text-blue);
+            font-weight: 700;
+            display: block;
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+        }
+
+        .answer-input {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 2px dotted var(--text-dark);
+            min-width: 120px;
+            padding: 0 5px;
+            margin: 0 5px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-blue);
+            height: 1.5em;
+            vertical-align: bottom;
+            transition: all 0.3s ease;
+        }
+
+        .answer-input.correct {
+            border-color: var(--success-color);
+            color: var(--success-color);
+        }
+
+        .answer-input.incorrect {
+            border-color: var(--error-color);
+            color: var(--error-color);
+            /* Añadido tachado visual suave para indicar error */
+            text-decoration: line-through;
+            text-decoration-thickness: 2px;
+        }
+
+        .letter-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 30px 0;
+            min-height: 60px;
+        }
+
+        .letter-btn {
+            width: 45px;
+            height: 45px;
+            font-size: 1.1rem;
+            font-family: 'Poppins', sans-serif;
+            background-color: #e1eaed;
+            border: 1px solid #c5d0d4;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+            font-weight: 600;
+            color: var(--text-dark);
+			touch-action: manipulation; /* Agregado para evitar zoom */
+        }
+
+		/* --- BLOQUEAR EL HOVER DE ASTRA (VERSIÓN CORRECTA) --- */
+		.letter-btn:hover:not(:disabled) {
+		    background-color: #e1eaed !important;   /* Tu gris original */
+		    color: var(--text-dark) !important;     /* Tu color de texto original (#232323) */
+		    transform: none !important;             /* Sin movimiento */
+		    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important; /* Tu sombra original */
+		    border: 1px solid #c5d0d4 !important;   /* Tu borde original */
+		}
+
+        .letter-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .letter-btn:disabled {
+            opacity: 0;
+            cursor: default;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .letter-btn.hint {
+            background-color: #9b59b6;
+            color: white;
+            border-color: #9b59b6;
+            animation: pulse 0.6s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn-primary, .btn-secondary {
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+			touch-action: manipulation; /* Agregado para evitar zoom */
+        }
+
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 12px rgba(230, 0, 0, 0.2); }
+        
+        .btn-secondary { background-color: var(--secondary-color); color: white; }
+        .btn-secondary:hover { background-color: var(--secondary-hover); transform: translateY(-2px); box-shadow: 0 6px 12px rgba(83, 190, 161, 0.2); }
+
+        /* NUEVOS ESTILOS PARA EL FEEDBACK DE ERROR */
+        .feedback-panel {
+            display: none; /* Oculto por defecto */
+            background-color: #f1fcf8;
+            border: 2px solid var(--secondary-color);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .feedback-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .feedback-answer {
+            color: var(--success-color);
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+        }
+
+        /* Clase para ocultar los controles cuando se muestra el error */
+        .controls-hidden .letter-buttons,
+        .controls-hidden .action-buttons-game { 
+            display: none !important; 
+        }
+
+        /* PANTALLA FINAL */
+        .emoji { font-size: 4rem; margin: 10px 0; display: block; }
+        .score-display { margin: 25px 0; padding: 20px; background: #f9f9f9; border-radius: 10px; }
+        .percentage { font-size: 2.5rem; font-weight: 800; display: block; margin-top: 10px; }
+        .percentage.success { color: var(--secondary-color); }
+        .percentage.error { color: var(--error-color); }
+
+        footer {
+            color: #888;
+            font-size: 0.7rem;
+            text-align: center;
+			margin-top: 30px; /* Espacio para separarlo de los botones */
+			padding-top: 15px;
+        }
+
+		@media (max-width: 600px) {
+		    .quiz-container { 
+		        padding: 20px 10px;
+		        margin: 10px auto; 
+		        width: 96%;
+		    }
+		    .end-title {
+		        width: 100%;
+		        padding: 20px 0;
+		    }
+		    .score-display {
+		        padding: 15px;
+		        margin: 15px 0;
+		    }
+		    .start-title { font-size: 1.3rem; }
+		    
+			/* --- CAMBIO: Apretamos los botones para que entren más --- */
+			    .letter-buttons {
+			        gap: 5px;       /* Reducido de 10px a 5px */
+			        margin: 15px 0; /* Un poco menos de margen vertical */
+			    }
+
+			    /* --- CAMBIO: Botones más grandes y cómodos --- */
+			    .letter-btn { 
+			        width: 46px;      /* Aumentado de 38px a 46px */
+			        height: 46px;     /* Aumentado de 38px a 46px */
+			        font-size: 1.2rem; /* Letra un poco más grande */
+			        margin: 0;        /* Quitamos márgenes extra para usar solo el 'gap' */
+			    }
+
+			    .btn-primary, .btn-secondary { padding: 12px 15px; font-size: 1rem; width: 80%; }
+			    .action-buttons { gap: 10px; }
+			}
+			
+			
+    </style>
+</head>
+<body>
+	<div class="quiz-container">
+	    <div id="game-content"></div> 
+    
+	    <footer class="internal-footer">
+	        by Catalina Moreno E.
+	    </footer>
+	</div>
+
+    <script>
+        const QUIZ_DATA = {
+            "rate": 70,
+            "start": {
+                "title": "VIDEO Y QUIZ",
+                "subtitle": "La familia",
+                "directions": "Mira el video y haz clic en EMPEZAR. Completa las frases con las palabras que faltan",
+                "img": "https://www.practiquemos.com/nuevos-quizzes-angel/familia-img/ejercicio-la-familia.webp",
+				"videoID": "OtcbGSKss_U" // Solo el ID del video
+            },
+            "endImage": "https://www.practiquemos.com/nuevos-quizzes-angel/fin-angel.webp",
+		    "questions": [
+
+
+		        {
+		            "img": "https://www.practiquemos.com/nuevos-quizzes-angel/familia-img/tios.webp",
+		            "title": "Los hermanos de mi padre son mis {1} .",
+		            "answer": " tíos",
+		            "audioSuccess": "https://www.practiquemos.com/nuevos-quizzes-angel/familia-audio/tios.mp3"
+		        },
+		        {
+		            "img": "https://www.practiquemos.com/nuevos-quizzes-angel/familia-img/nuera.webp",
+		            "title": "La mujer de mi hijo es mi {1} .",
+		            "answer": " nuera",
+		            "audioSuccess": "https://www.practiquemos.com/nuevos-quizzes-angel/familia-audio/nuera.mp3"
+		        }
+
+
+		    ]
+        };
+
+        class AudioGenerator {
+            constructor() {
+                this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            playSuccess() {
+                this.playTone(523.25, 'sine', 0.1);
+                setTimeout(() => this.playTone(659.25, 'sine', 0.1), 100);
+                setTimeout(() => this.playTone(783.99, 'sine', 0.2), 200);
+            }
+
+			playError() {
+			    // Usamos 'sine' que es mucho más suave y bajamos un poco el tono
+			    this.playTone(300, 'sine', 0.2); 
+			    setTimeout(() => this.playTone(220, 'sine', 0.4), 200);
+			}
+
+            playWin() {
+                const notes = [261.63, 329.63, 392.00, 523.25];
+                notes.forEach((freq, i) => setTimeout(() => this.playTone(freq, 'sine', 0.2), i * 150));
+            }
+
+            playLose() {
+                this.playTone(300, 'triangle', 0.3);
+                setTimeout(() => this.playTone(150, 'triangle', 0.5), 300);
+            }
+
+            playTone(freq, type, duration) {
+                const osc = this.audioContext.createOscillator();
+                const gain = this.audioContext.createGain();
+                osc.type = type;
+                osc.frequency.value = freq;
+                osc.connect(gain);
+                gain.connect(this.audioContext.destination);
+                gain.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + duration);
+                osc.start();
+                osc.stop(this.audioContext.currentTime + duration);
+            }
+        }
+
+        class QuizGame {
+            constructor(config, audioGenerator) {
+                this.config = config;
+                this.audio = audioGenerator;
+                this.currentQuestionIndex = 0;
+                this.score = 0;
+                this.totalPossibleScore = 0;
+                this.questions = [];
+                this.currentAnswer = [];
+                this.correctAnswer = '';
+                this.container = document.getElementById('game-content');
+                this.init();
+            }
+
+            init() {
+                this.calculateTotalScore();
+                this.shuffleQuestions();
+                this.showStartScreen();
+            }
+
+            calculateTotalScore() {
+                this.config.questions.forEach(q => this.totalPossibleScore += q.answer.trim().length);
+            }
+
+            shuffleQuestions() {
+                this.questions = [...this.config.questions].sort(() => Math.random() - 0.5);
+            }
+
+			
+			
+			showStartScreen() {
+			                const startData = this.config.start;
+                
+			                this.container.innerHTML = `
+			                    <div class="start-screen fade-in">
+			                        <div id="video-placeholder" class="hero-image" style="cursor:pointer;">
+			                            <img src="${startData.img}" alt="Portada">
+			                            <div class="play-button-overlay">
+			                                <span style="color:white; font-size:24px; margin-left:4px;">▶</span>
+			                            </div>
+			                        </div>
+                        
+			                        <div class="start-title">${startData.title}<br><span style="font-size:0.7em; color:#666">${startData.subtitle}</span></div>
+			                        <div class="start-content">
+			                            <p>${startData.directions}</p>
+			                            <p style="margin-top:15px"><b>${this.config.questions.length} PREGUNTAS</b></p>
+			                        </div>
+			                        <div class="action-buttons">
+			                            <button class="btn-primary" id="start-btn">EMPEZAR</button>
+			                        </div>
+			                    </div>
+			                `;
+
+							// Cargar video al hacer clic
+							document.getElementById('video-placeholder').addEventListener('click', function() {
+							    this.innerHTML = `
+							        <iframe 
+							            width="100%" 
+							            height="100%" 
+							            src="https://www.youtube.com/embed/${startData.videoID}?autoplay=1&rel=0&modestbranding=1" 
+							            title="YouTube video player" 
+							            frameborder="0" 
+							            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+							            referrerpolicy="strict-origin-when-cross-origin"
+							            allowfullscreen>
+							        </iframe>`;
+							});
+
+			                document.getElementById('start-btn').addEventListener('click', () => {
+			                    this.audio.audioContext.resume().then(() => this.showQuestion());
+			                });
+			            }
+
+
+
+
+
+            showQuestion() {
+                if (this.currentQuestionIndex >= this.questions.length) {
+                    this.showResults();
+                    return;
+                }
+
+                const question = this.questions[this.currentQuestionIndex];
+                this.correctAnswer = question.answer.trim();
+                this.currentAnswer = [];
+                
+                const progressPct = ((this.currentQuestionIndex) / this.questions.length) * 100;
+                const shuffledLetters = this.correctAnswer.split('').sort(() => Math.random() - 0.5);
+                const titleParts = question.title.split('{1}');
+                const imgHTML = question.img 
+                    ? `<div class="hero-image"><img src="${question.img}" alt="Question"></div>`
+                    : '';
+
+                this.container.innerHTML = `
+                    <div class="question-screen fade-in">
+                        ${imgHTML}
+                        
+                        <div class="question-title">
+                            ${titleParts[0]}
+                            <span class="answer-input">&nbsp;</span>
+                            ${titleParts[1] || ''}
+                        </div>
+                        
+                        <div class="letter-buttons">
+                            ${shuffledLetters.map((l, i) => `<button class="letter-btn" data-letter="${l}" data-index="${i}">${l}</button>`).join('')}
+                        </div>
+                        
+                        <div class="feedback-panel" id="feedback-panel">
+                            <div class="feedback-label">La respuesta correcta es:</div>
+                            <div class="feedback-answer">${this.correctAnswer}</div>
+                            <button class="btn-primary" id="continue-btn">CONTINUAR →</button>
+                        </div>
+
+                        <div class="action-buttons action-buttons-game">
+                            <button class="btn-primary" id="delete-btn">← BORRAR</button>
+                            <button class="btn-secondary" id="help-btn">AYUDA</button>
+                        </div>
+							
+                        <div class="progress-info">
+                            <span>Progreso</span>
+                            <span>${this.currentQuestionIndex + 1} / ${this.questions.length}</span>
+                        </div>
+
+                        <div class="progress-container">
+                            <div class="progress-bar" style="width: ${progressPct}%"></div>
+                        </div>
+                    </div>
+                `;
+                
+                setTimeout(() => {
+                    const newProgress = ((this.currentQuestionIndex + 1) / this.questions.length) * 100;
+                    document.querySelector('.progress-bar').style.width = `${newProgress}%`;
+                }, 50);
+
+                this.attachQuestionListeners();
+            }
+
+            attachQuestionListeners() {
+                const btns = document.querySelectorAll('.letter-btn');
+                btns.forEach(btn => btn.addEventListener('click', () => this.selectLetter(btn)));
+                
+                document.getElementById('delete-btn').addEventListener('click', () => this.deleteLetter());
+                document.getElementById('help-btn').addEventListener('click', () => this.showHelp());
+                
+                // Listener para el botón de Continuar (para errores)
+                document.getElementById('continue-btn').addEventListener('click', () => {
+                    this.currentQuestionIndex++;
+                    this.showQuestion();
+                });
+
+                this.keyboardHandler = (e) => {
+                    // Si el panel de feedback está visible, deshabilitar teclado excepto Enter para continuar
+                    const feedbackVisible = document.getElementById('feedback-panel').style.display === 'block';
+                    
+                    if (feedbackVisible) {
+                        if (e.key === 'Enter') {
+                            this.currentQuestionIndex++;
+                            this.showQuestion();
+                        }
+                        return;
+                    }
+
+                    if (e.key === 'Backspace') this.deleteLetter();
+                    else if (e.key === 'Enter') this.showHelp();
+                    else {
+                        const btn = Array.from(document.querySelectorAll('.letter-btn:not(:disabled)'))
+                            .find(b => b.dataset.letter.toLowerCase() === e.key.toLowerCase());
+                        if (btn) this.selectLetter(btn);
+                    }
+                };
+                document.addEventListener('keydown', this.keyboardHandler);
+            }
+
+            selectLetter(btn) {
+                this.currentAnswer.push(btn.dataset.letter);
+                btn.disabled = true;
+                this.updateDisplay();
+                if (this.currentAnswer.length === this.correctAnswer.length) this.checkAnswer();
+            }
+
+            deleteLetter() {
+                if (this.currentAnswer.length === 0) return;
+                const letter = this.currentAnswer.pop();
+                const btn = Array.from(document.querySelectorAll('.letter-btn:disabled'))
+                    .find(b => b.dataset.letter === letter);
+                if (btn) btn.disabled = false;
+                this.updateDisplay();
+            }
+
+            showHelp() {
+                const currentStr = this.currentAnswer.join('');
+                const correctSub = this.correctAnswer.substring(0, this.currentAnswer.length);
+                if (currentStr !== correctSub) {
+                    while (this.currentAnswer.length > 0) this.deleteLetter();
+                }
+                if (this.currentAnswer.length < this.correctAnswer.length) {
+                    const nextChar = this.correctAnswer[this.currentAnswer.length];
+                    const btn = Array.from(document.querySelectorAll('.letter-btn:not(:disabled)'))
+                        .find(b => b.dataset.letter === nextChar);
+                    if (btn) {
+                        btn.classList.add('hint');
+                        setTimeout(() => btn.classList.remove('hint'), 500);
+                    }
+                }
+            }
+
+            updateDisplay() {
+                const el = document.querySelector('.answer-input');
+                el.textContent = this.currentAnswer.join('') || '\u00A0';
+                el.classList.remove('correct', 'incorrect');
+            }
+
+            async checkAnswer() {
+                document.removeEventListener('keydown', this.keyboardHandler);
+                const isCorrect = this.currentAnswer.join('') === this.correctAnswer;
+                const display = document.querySelector('.answer-input');
+                const q = this.questions[this.currentQuestionIndex];
+                
+                if (isCorrect) {
+                    // --- CASO CORRECTO (FLUJO RÁPIDO) ---
+                    display.classList.add('correct');
+                    this.score += this.correctAnswer.length;
+                    this.audio.playSuccess();
+                    
+                    // Espera corta y avanza
+                    await new Promise(r => setTimeout(r, 1000)); // espera 1 segundo antes de la próxima pregunta
+                    if (q.audioSuccess) await this.playAudio(q.audioSuccess);
+                    
+					await new Promise(r => setTimeout(r, 1500));
+					
+                    this.currentQuestionIndex++;
+                    this.showQuestion();
+
+                } else {
+                    // --- CASO INCORRECTO (FLUJO LENTO / COMPARATIVO) ---
+                    display.classList.add('incorrect');
+                    this.audio.playError();
+                    
+                    // 1. Ocultar botones de letras y acción
+                    document.querySelector('.question-screen').classList.add('controls-hidden');
+
+                    // 2. Mostrar panel de corrección
+                    const feedbackPanel = document.getElementById('feedback-panel');
+                    feedbackPanel.style.display = 'block';
+
+					// 3. Esperar 1 segundo antes de lanzar el audio de la voz
+					if (q.audioSuccess) {
+					    setTimeout(() => {
+					        this.playAudio(q.audioSuccess);
+					    }, 1000);
+					}
+
+                    // 4. EL JUEGO SE PAUSA AQUÍ hasta que el usuario presione "CONTINUAR" en el listener.
+                }
+            }
+
+            playAudio(file) {
+                return new Promise(resolve => {
+                    const audio = new Audio(`${file}`);
+                    audio.onended = resolve;
+                    audio.onerror = resolve;
+                    audio.play().catch(resolve);
+                });
+            }
+
+            showResults() {
+                const pct = Math.round((this.score / this.totalPossibleScore) * 100);
+                const passed = pct >= this.config.rate;
+                
+                const endImg = this.config.endImage 
+                    ? `<div class="hero-image"><img src="${this.config.endImage}" alt="Result"></div>` 
+                    : '';
+
+                this.container.innerHTML = `
+                    <div class="end-screen fade-in">
+                        ${endImg}
+                        <div class="end-title">
+                            ${passed ? '¡MUY BIEN HECHO!' : 'BUEN INTENTO'}
+                            <span class="emoji">${passed ? '😎' : '💪'}</span>
+                        </div>
+                        <div class="score-display">
+                            <p>Tu puntuación final</p>
+                            <span class="percentage ${passed ? 'success' : 'error'}">${pct}%</span>
+                            
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn-primary" id="retry-btn">JUGAR OTRA VEZ</button>
+                        </div>
+                    </div>
+                `;
+                
+                if (passed) this.audio.playWin();
+                else this.audio.playLose();
+
+                document.getElementById('retry-btn').addEventListener('click', () => {
+                    this.currentQuestionIndex = 0;
+                    this.score = 0;
+                    this.shuffleQuestions();
+                    this.showStartScreen();
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const audioGen = new AudioGenerator();
+            new QuizGame(QUIZ_DATA, audioGen);
+        });
+    </script>
+</body>
+</html>
