@@ -5,51 +5,89 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clase de Español: Destino México</title>
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f4f4f4; }
-        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { color: #d32f2f; border-bottom: 2px solid #d32f2f; padding-bottom: 10px; }
-        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; margin-bottom: 20px; }
-        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 8px; }
-        .transcript-box { background: #fffdf0; border-left: 5px solid #ffeb3b; padding: 15px; margin-top: 20px; }
-        .timestamp { color: #777; font-weight: bold; margin-right: 10px; font-size: 0.9em; }
-        .translator-container { margin-bottom: 20px; padding: 10px; background: #eee; border-radius: 5px; display: flex; align-items: center; justify-content: space-between; }
+        :root {
+            --primary-color: #d32f2f;
+            --bg-color: #f8f9fa;
+            --text-color: #333;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.7; max-width: 900px; margin: 0 auto; padding: 40px 20px; background-color: var(--bg-color); color: var(--text-color); }
+        .container { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        
+        h1 { color: var(--primary-color); text-align: center; margin-bottom: 30px; font-weight: 700; }
+        
+        /* Contenedor de video elegante */
+        .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.2); margin-bottom: 30px; }
+        .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
+        /* Selector de idioma moderno */
+        .language-picker { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; padding: 15px; background: #fff; border: 1px solid #eee; border-radius: 50px; }
+        .lang-btn { cursor: pointer; border: none; background: none; transition: transform 0.2s; filter: grayscale(40%); }
+        .lang-btn:hover { transform: scale(1.2); filter: grayscale(0%); }
+        
+        /* Transcripción */
+        .transcript-container { background: #fafafa; padding: 25px; border-radius: 10px; border-left: 4px solid var(--primary-color); }
+        .line { margin-bottom: 15px; display: flex; align-items: flex-start; }
+        .timestamp { min-width: 60px; color: #999; font-size: 0.85em; font-family: monospace; margin-top: 4px; }
+        .text { flex: 1; }
+
+        /* Ocultar elementos feos de Google */
+        .goog-te-banner-frame.skiptranslate { display: none !important; }
+        body { top: 0px !important; }
+        #google_translate_element { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Destino 48h: México (Iberia)</h1>
-    
-    <div class="translator-container">
-        <span>Selecciona tu idioma:</span>
-        <div id="google_translate_element"></div>
+    <h1>🇲🇽 Destino 48h: México</h1>
+
+    <div class="language-picker">
+        <span style="align-self: center; font-weight: bold; margin-right: 10px;">Traducir: </span>
+        <button class="lang-btn" onclick="changeLanguage('es')" title="Español">🇪🇸</button>
+        <button class="lang-btn" onclick="changeLanguage('en')" title="English">🇺🇸</button>
+        <button class="lang-btn" onclick="changeLanguage('fr')" title="Français">🇫🇷</button>
+        <button class="lang-btn" onclick="changeLanguage('de')" title="Deutsch">🇩🇪</button>
+        <button class="lang-btn" onclick="changeLanguage('it')" title="Italiano">🇮🇹</button>
+        <button class="lang-btn" onclick="changeLanguage('pt')" title="Português">🇧🇷</button>
     </div>
 
-    <div class="video-container">
-        <iframe src="https://www.youtube.com/embed/OtcbGSKss_U" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <div class="video-wrapper">
+        <iframe src="https://www.youtube.com/embed/OtcbGSKss_U" allowfullscreen></iframe>
     </div>
 
-    <p><em>Escucha al tripulante de Iberia y sigue la lectura de la transcripción.</em></p>
+    <div id="google_translate_element"></div>
 
-    <div class="transcript-box">
-        <p><span class="timestamp">[00:01]</span> Hola, soy Óscar, tripulante de Iberia desde hace 25 años. Hoy voy a volar a uno de mis destinos favoritos: México. ¿Me acompañas?</p>
-        <p><span class="timestamp">[00:24]</span> Son las 6:00 de la tarde, la 1:00 de la mañana en Madrid. Nada, una ducha rápida en el hotel y nos vamos a tomar algo rico por la zona de Polanco.</p>
-        <p><span class="timestamp">[00:33]</span> Blanca y yo nos hemos venido después del vuelo para tomar algo por esta zona que está llena de restaurantes y de muchísimas opciones. Pero a mí la que más me gusta es la mexicana y hoy vamos a comenzar con unos tacos de cochinita pibil.</p>
-        <p><span class="timestamp">[00:48]</span> ¡Buenos días! Siempre me preguntan qué hago para combatir el jet lag. La mejor forma para mí es hacer algo de deporte y Ciudad de México me ofrece la combinación perfecta: bicicleta y visitar la ciudad.</p>
-        <p><span class="timestamp">[01:00]</span> Estamos en el Bosque de Chapultepec y el Jardín Botánico. Es uno de mis sitios favoritos.</p>
-        <p><span class="timestamp">[01:07]</span> El Ángel de la Independencia. Es uno de los lugares más icónicos dentro de la Ciudad de México.</p>
-        <p><span class="timestamp">[01:16]</span> Siguiente parada: centro histórico de México. Nos encontramos en la Plaza del Zócalo, la segunda más grande del mundo. La catedral, el antiguo ayuntamiento y muchos edificios civiles. Merece la pena hacer una parada aquí.</p>
-        <p><span class="timestamp">[01:30]</span> Otro de los sitios más importantes en la Ciudad de México es el Palacio de Bellas Artes. Acompañadme a otro sitio para verlo mejor.</p>
-        <p><span class="timestamp">[01:37]</span> ¿Merece o no la pena la vista que tenemos desde aquí? Pero por favor, no se lo comentéis a nadie para que no deje de ser un sitio especial.</p>
-        <p><span class="timestamp">[01:43]</span> Y... no hay viaje sin compras. En este caso estamos en el Mercado de la Ciudadela, mi favorito en la Ciudad de México. Imprescindible esta parada.</p>
-        <p><span class="timestamp">[01:56]</span> Llegamos a la parte final de nuestra visita. Estamos en la zona donde se encuentra el Museo Soumaya y Fundación Jumex. Para mí, dos de mis museos imprescindibles en México. Ahora, regreso al hotel, el uniforme y a volar.</p>
+    <div class="transcript-container">
+        <div class="line"><span class="timestamp">00:01</span><div class="text">Hola, soy Óscar, tripulante de Iberia desde hace 25 años. Hoy voy a volar a uno de mis destinos favoritos: México. ¿Me acompañas?</div></div>
+        <div class="line"><span class="timestamp">00:24</span><div class="text">Son las 6:00 de la tarde, la 1:00 de la mañana en Madrid. Nada, una ducha rápida en el hotel y nos vamos a tomar algo rico por la zona de Polanco.</div></div>
+        <div class="line"><span class="timestamp">00:33</span><div class="text">Blanca y yo nos hemos venido después del vuelo para tomar algo por esta zona que está llena de restaurantes y de muchísimas opciones. Pero a mí la que más me gusta es la mexicana y hoy vamos a comenzar con unos tacos de cochinita pibil.</div></div>
+        <div class="line"><span class="timestamp">00:48</span><div class="text">¡Buenos días! Siempre me preguntan qué hago para combatir el jet lag. La mejor forma para mí es hacer algo de deporte y Ciudad de México me ofrece la combinación perfecta: bicicleta y visitar la ciudad.</div></div>
+        <div class="line"><span class="timestamp">01:00</span><div class="text">Estamos en el Bosque de Chapultepec y el Jardín Botánico. Es uno de mis sitios favoritos.</div></div>
+        <div class="line"><span class="timestamp">01:07</span><div class="text">El Ángel de la Independencia. Es uno de los lugares más icónicos dentro de la Ciudad de México.</div></div>
+        <div class="line"><span class="timestamp">01:16</span><div class="text">Siguiente parada: centro histórico de México. Nos encontramos en la Plaza del Zócalo, la segunda más grande del mundo. La catedral, el antiguo ayuntamiento y muchos edificios civiles. Merece la pena hacer una parada aquí.</div></div>
+        <div class="line"><span class="timestamp">01:30</span><div class="text">Otro de los sitios más importantes en la Ciudad de México es el Palacio de Bellas Artes. Acompañadme a otro sitio para verlo mejor.</div></div>
+        <div class="line"><span class="timestamp">01:37</span><div class="text">¿Merece o no la pena la vista que tenemos desde aquí? Pero por favor, no se lo comentéis a nadie para que no deje de ser un sitio especial.</div></div>
+        <div class="line"><span class="timestamp">01:43</span><div class="text">Y... no hay viaje sin compras. En este caso estamos en el Mercado de la Ciudadela, mi favorito en la Ciudad de México. Imprescindible esta parada.</div></div>
+        <div class="line"><span class="timestamp">01:56</span><div class="text">Llegamos a la parte final de nuestra visita. Estamos en la zona donde se encuentra el Museo Soumaya y Fundación Jumex. Para mí, dos de mis museos imprescindibles en México. Ahora, regreso al hotel, el uniforme y a volar.</div></div>
     </div>
 </div>
 
 <script type="text/javascript">
-function googleTranslateElementInit() {
-  new google.translate.TranslateElement({pageLanguage: 'es', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
-}
+    function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+            pageLanguage: 'es',
+            includedLanguages: 'en,fr,de,it,pt,es',
+            autoDisplay: false
+        }, 'google_translate_element');
+    }
+
+    function changeLanguage(langCode) {
+        var select = document.querySelector('.goog-te-combo');
+        if (select) {
+            select.value = langCode;
+            select.dispatchEvent(new Event('change'));
+        }
+    }
 </script>
 <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
