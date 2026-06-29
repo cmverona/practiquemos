@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expresiones con SER — Ester Fantoni</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .quiz-wrapper {
+            max-width: 750px !important;
+            margin: auto;
+        }
+        @media (max-width: 750px) {
+            .quiz-wrapper {
+                max-width: calc(100% - 20px) !important;
+                margin: 0 auto !important;
+            }
+        }
+        .mic-button {
+            transition: all 0.2s ease-in-out;
+        }
+        .mic-button:hover {
+            transform: scale(1.05);
+        }
+        .recording-pulse {
+            animation: pulse 1.5s infinite;
+        }
+        .repeat-bounce {
+            animation: bounce-repeat 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes bounce-repeat {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class='quiz-wrapper bg-white w-full text-center flex flex-col justify-between border border-gray-200 md:rounded-2xl md:shadow-2xl overflow-hidden'>
+
+        <!-- CABECERA -->
+        <div class='px-8 py-5' style='background: linear-gradient(135deg, #2e6094, #4682b4);'>
+            <h2 class="text-xl font-bold text-white tracking-wide">Descripciones con el verbo SER</h2>
+            <p class="text-sm text-blue-100 mt-1">Ester Fantoni — Me parece / No sé si / ¿Qué te parece?</p>
+        </div>
+
+        <!-- INSTRUCCIONES -->
+        <div class='px-6 py-4 bg-white text-base text-gray-600'>
+            <strong class="text-gray-800">Lee la frase en voz alta</strong> 🎤
+            <br><span class="text-sm text-gray-400">Leggi la frase ad alta voce. La traduzione italiana ti aiuta!<br>Se proprio non sai come si pronuncia, fai clic su "Ayuda".</span>
+        </div>
+
+        <div class='p-8'>
+
+            <div id='question-container' class='rounded-2xl px-6 py-5 mb-6' style='background-color: #eef4f9; border: 2px solid #a8c4d8;'>
+                <p id='verb-question' class='text-[24px] font-extrabold mb-2 leading-[1.60]' style='color: #2e6094;'>—</p>
+                <p id='translation-text' class='text-[15px] text-gray-400 italic'></p>
+            </div>
+
+            <div class='flex items-center justify-center space-x-4 mb-6' id='button-container'>
+                <button id='mic-button' class='mic-button px-6 py-3 rounded-full bg-red-600 text-white font-bold shadow-lg transition-colors duration-200 focus:outline-none focus:ring-4 focus:ring-blue-300 flex items-center gap-2'>
+                    <span>Click & Habla</span>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div id='feedback-message' class='h-6 mt-2'></div>
+
+            <div class='mb-6 border-2 border-gray-100 bg-gray-50 rounded-2xl px-6 py-4 min-h-[80px] flex items-center justify-center'>
+                <p id='recognized-text' class='text-[22px] text-gray-700 font-semibold min-w-0 break-words'></p>
+            </div>
+        </div>
+
+        <div class='mt-4 mb-6 flex justify-center'>
+            <button id='next-button' class='px-10 py-3 text-white font-bold rounded-full transition-colors duration-200 focus:outline-none shadow-lg bg-green-600 hover:bg-green-700'>Ayuda</button>
+        </div>
+
+        <!-- FOOTER -->
+        <div class='pb-4 text-center'>
+            <p class='text-[11px] text-gray-400 tracking-wide'>Interactive Quizzes by Catalina Moreno</p>
+        </div>
+
+        <div id='error-modal' class='fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50'>
+            <div class='bg-white p-6 rounded-lg shadow-xl text-center max-w-md mx-4'>
+                <h3 class='text-xl font-bold text-red-600 mb-4'>Error Detectado</h3>
+                <div id='error-details' class='text-gray-700 mb-6 text-left bg-gray-100 p-3 rounded text-sm'></div>
+                <p class='text-sm text-gray-600 mb-4'>Por favor, revisa la configuración de tu micrófono y permisos del navegador.</p>
+                <button id='close-modal' class='px-4 py-2 bg-red-600 text-white font-bold rounded-full hover:bg-red-700 transition-colors'>Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // ===== CONFIGURACIÓN =====
+            const QUIZ_CONFIG = {
+                titulo: "Ester Fantoni — Expresiones SER",
+                googleFormUrl: 'https://docs.google.com/forms/d/e/1FAIpQLScKfHfxZjiADQacWmRK8Rh4oE8gGFWTTZDuYIc_FzeIM0THog/formResponse',
+                entryId: 'entry.876698263'
+            };
+
+            // ===== FRASES DEL EJERCICIO =====
+            const verbExercises = [
+                // --- ME PARECE ---
+                {
+                    question: "Penélope Cruz me parece muy guapa.",
+                    correctAnswers: ["Penélope Cruz me parece muy guapa."],
+                    translation: "Penélope Cruz mi sembra molto bella."
+                },
+                {
+                    question: "Juan no me parece muy inteligente. Es tonto.",
+                    correctAnswers: ["Juan no me parece muy inteligente. Es tonto."],
+                    translation: "Juan non mi sembra molto intelligente. È stupido."
+                },
+                {
+                    question: "Silvia no me parece simpática. Es antipática.",
+                    correctAnswers: ["Silvia no me parece simpática. Es antipática."],
+                    translation: "Silvia non mi sembra simpatica. È antipatica."
+                },
+                {
+                    question: "Roberto no me parece sincero.",
+                    correctAnswers: ["Roberto no me parece sincero."],
+                    translation: "Roberto non mi sembra sincero."
+                },
+                {
+                    question: "Ana me parece muy buena persona.",
+                    correctAnswers: ["Ana me parece muy buena persona."],
+                    translation: "Ana mi sembra una persona molto buona."
+                },
+                {
+                    question: "Ricky Martin es muy famoso.",
+                    correctAnswers: ["Ricky Martin es muy famoso."],
+                    translation: "Ricky Martin è molto famoso."
+                },
+                // --- NO ME PARECE ---
+                {
+                    question: "No me parece simpático.",
+                    correctAnswers: ["No me parece simpático."],
+                    translation: "Non mi sembra simpatico."
+                },
+                {
+                    question: "No me parece inteligente.",
+                    correctAnswers: ["No me parece inteligente."],
+                    translation: "Non mi sembra intelligente."
+                },
+                {
+                    question: "Sandra no me parece mala persona.",
+                    correctAnswers: ["Sandra no me parece mala persona."],
+                    translation: "Sandra non mi sembra una persona cattiva."
+                },
+                {
+                    question: "No me parece joven. Es mayor.",
+                    correctAnswers: ["No me parece joven. Es mayor."],
+                    translation: "Non mi sembra giovane. È anziano."
+                },
+                // --- ¿QUÉ TE PARECE? ---
+                {
+                    question: "¿Carlos te parece antipático?",
+                    correctAnswers: ["¿Carlos te parece antipático?"],
+                    translation: "Carlos ti sembra antipatico?"
+                },
+                {
+                    question: "¿Qué te parece María?",
+                    correctAnswers: ["¿Qué te parece María?"],
+                    translation: "Cosa pensi di María?"
+                },
+                {
+                    question: "¿Qué te parece Pedro?",
+                    correctAnswers: ["¿Qué te parece Pedro?"],
+                    translation: "Cosa pensi di Pedro?"
+                },
+                // --- NO SÉ SI ---
+                {
+                    question: "No sé si Juan es simpático.",
+                    correctAnswers: ["No sé si Juan es simpático."],
+                    translation: "Non so se Juan è simpatico."
+                },
+                {
+                    question: "No sé si Roberto es rico.",
+                    correctAnswers: ["No sé si Roberto es rico."],
+                    translation: "Non so se Roberto è ricco."
+                },
+                {
+                    question: "No sé si Ana es sincera.",
+                    correctAnswers: ["No sé si Ana es sincera."],
+                    translation: "Non so se Ana è sincera."
+                },
+                {
+                    question: "No sé si él es famoso.",
+                    correctAnswers: ["No sé si él es famoso."],
+                    translation: "Non so se è famoso."
+                },
+                {
+                    question: "No sé si el profesor es buena persona.",
+                    correctAnswers: ["No sé si el profesor es buena persona."],
+                    translation: "Non so se il professore è una brava persona."
+                },
+                {
+                    question: "No sé si Carmen es española.",
+                    correctAnswers: ["No sé si Carmen es española."],
+                    translation: "Non so se Carmen è spagnola."
+                },
+                // --- CON PRONOMBRES ---
+                {
+                    question: "Yo soy muy sincera.",
+                    correctAnswers: ["Yo soy muy sincera."],
+                    translation: "Io sono molto sincera."
+                },
+                {
+                    question: "Claudia, eres muy inteligente.",
+                    correctAnswers: ["Claudia, eres muy inteligente."],
+                    translation: "Claudia, sei molto intelligente."
+                },
+                {
+                    question: "Nosotros no somos ricos, pero somos muy trabajadores.",
+                    correctAnswers: ["Nosotros no somos ricos, pero somos muy trabajadores."],
+                    translation: "Noi non siamo ricchi, ma siamo molto lavoratori."
+                },
+                {
+                    question: "Él es alto y delgado.",
+                    correctAnswers: ["Él es alto y delgado."],
+                    translation: "Lui è alto e magro."
+                },
+                {
+                    question: "Ella es joven y muy simpática.",
+                    correctAnswers: ["Ella es joven y muy simpática."],
+                    translation: "Lei è giovane e molto simpatica."
+                },
+                {
+                    question: "¿Eres morena o rubia?",
+                    correctAnswers: ["¿Eres morena o rubia?"],
+                    translation: "Sei mora o bionda?"
+                },
+                {
+                    question: "No somos famosos, pero somos felices.",
+                    correctAnswers: ["No somos famosos, pero somos felices."],
+                    translation: "Non siamo famosi, ma siamo felici."
+                },
+                {
+                    question: "¿Sois amigos de Roberto?",
+                    correctAnswers: ["¿Sois amigos de Roberto?"],
+                    translation: "Siete amici di Roberto?"
+                },
+                {
+                    question: "Ellos son muy antipáticos.",
+                    correctAnswers: ["Ellos son muy antipáticos."],
+                    translation: "Loro sono molto antipatici."
+                },
+            ];
+
+            // ===== FRASES POR RONDA =====
+            const QUESTIONS_PER_ROUND = 8;
+
+            // ===== REGISTRO (Google Forms) =====
+            function registrarActividad(accion) {
+                const timestamp = new Date().toLocaleString('es-ES');
+                const dispositivo = /Mobile|Android|iPhone|iPad/.test(navigator.userAgent) ? 'Móvil' : 'Escritorio';
+                const navegador = navigator.userAgent.includes('Chrome') ? 'Chrome' :
+                                 navigator.userAgent.includes('Firefox') ? 'Firefox' :
+                                 navigator.userAgent.includes('Safari') ? 'Safari' : 'Otro';
+                const mensaje = `${QUIZ_CONFIG.titulo} | ${accion} | ${timestamp} | ${dispositivo} | ${navegador}`;
+                if (QUIZ_CONFIG.googleFormUrl && QUIZ_CONFIG.entryId) {
+                    const formData = new FormData();
+                    formData.append(QUIZ_CONFIG.entryId, mensaje);
+                    fetch(QUIZ_CONFIG.googleFormUrl, { method: 'POST', mode: 'no-cors', body: formData }).catch(() => {});
+                }
+            }
+
+            // ===== SÍNTESIS DE VOZ =====
+            function pronunciarFrase(texto) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(texto);
+                utterance.lang = 'es-ES';
+                utterance.rate = 0.85;
+                window.speechSynthesis.speak(utterance);
+            }
+
+            // ===== COMPARACIÓN =====
+            function limpiarTexto(texto) {
+                return texto.trim().replace(/[.?!,;¿¡]/g, '').replace(/\s+/g, ' ').toLowerCase();
+            }
+
+            // ===== SONIDOS =====
+            function playSound(frequency, duration, volume = 0.05) {
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    const filter = ctx.createBiquadFilter();
+                    filter.type = 'lowpass'; filter.frequency.value = 800;
+                    osc.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+                    osc.type = 'sine'; osc.frequency.value = frequency;
+                    gain.gain.setValueAtTime(0, ctx.currentTime);
+                    gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + 0.1);
+                    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + duration / 1000);
+                    osc.start(); osc.stop(ctx.currentTime + duration / 1000);
+                } catch (e) {}
+            }
+            function playClickSound()   { playSound(350, 200, 0.03); }
+            function playCorrectSound() { playSound(880, 200, 0.05); }
+            function playErrorSound()   { playSound(350, 400, 0.05); setTimeout(() => playSound(300, 400, 0.04), 150); }
+            function playFinalSound()   {
+                playSound(440, 200, 0.05);
+                setTimeout(() => playSound(554, 200, 0.08), 150);
+                setTimeout(() => playSound(659, 200, 0.09), 300);
+                setTimeout(() => playSound(880, 400, 0.10), 450);
+            }
+
+            // ===== ELEMENTOS =====
+            let currentExerciseIndex = 0;
+            let activeExercises = [];
+            const verbQuestionElement    = document.getElementById('verb-question');
+            const micButton              = document.getElementById('mic-button');
+            const recognizedTextElement  = document.getElementById('recognized-text');
+            const feedbackMessageElement = document.getElementById('feedback-message');
+            const nextButton             = document.getElementById('next-button');
+            const errorModal             = document.getElementById('error-modal');
+            const closeModalButton       = document.getElementById('close-modal');
+            let recognition = null;
+            let isRecognizing = false;
+
+            // ===== RECONOCIMIENTO DE VOZ =====
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRecognition) {
+                try {
+                    recognition = new SpeechRecognition();
+                    recognition.lang = 'es-ES';
+                    recognition.interimResults = false;
+                    recognition.continuous = false;
+                } catch (error) { recognition = null; }
+            }
+
+            if (recognition) {
+                recognition.onresult = (event) => {
+                    const speechResult = event.results[0][0].transcript;
+                    recognizedTextElement.textContent = speechResult;
+                    checkAnswer(speechResult);
+                };
+                recognition.onend = () => {
+                    isRecognizing = false;
+                    micButton.classList.remove('bg-red-500', 'recording-pulse');
+                    micButton.classList.add('bg-red-600');
+                    micButton.disabled = false;
+                    if (feedbackMessageElement.textContent !== '' && nextButton.textContent === 'Ayuda') {
+                        micButton.innerHTML = `<span>Repite - Click</span><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>`;
+                    }
+                };
+                recognition.onerror = (event) => {
+                    isRecognizing = false;
+                    micButton.classList.remove('bg-red-500', 'recording-pulse');
+                    micButton.classList.add('bg-red-600');
+                    micButton.innerHTML = `<span>Click & Habla</span><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>`;
+                    micButton.disabled = false;
+                    if (event.error === 'not-allowed') showErrorModal('permission_denied');
+                    else showErrorModal('recognition_error', event.error);
+                };
+            }
+
+            // ===== BARAJAR =====
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+
+            function prepararRonda() {
+                shuffleArray(verbExercises);
+                activeExercises = verbExercises.slice(0, QUESTIONS_PER_ROUND);
+                currentExerciseIndex = 0;
+            }
+
+            // ===== MOSTRAR PREGUNTA =====
+            function displayCurrentQuestion() {
+                if (currentExerciseIndex < activeExercises.length) {
+                    const ejercicio = activeExercises[currentExerciseIndex];
+                    verbQuestionElement.textContent = ejercicio.question;
+                    document.getElementById('translation-text').textContent = ejercicio.translation || '';
+                    recognizedTextElement.textContent = '';
+                    recognizedTextElement.classList.remove('text-red-600', 'text-green-600');
+                    recognizedTextElement.classList.add('text-gray-700');
+                    feedbackMessageElement.textContent = '';
+
+                    nextButton.textContent = 'Ayuda';
+                    nextButton.disabled = false;
+                    nextButton.className = 'px-10 py-3 text-white font-bold rounded-full transition-colors duration-200 focus:outline-none shadow-lg bg-green-600 hover:bg-green-700';
+
+                    micButton.classList.remove('hidden');
+                    micButton.classList.add('repeat-bounce');
+                    micButton.innerHTML = `<span>Click & Habla</span><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>`;
+                    micButton.disabled = false;
+                } else {
+                    registrarActividad('COMPLETADO');
+                    verbQuestionElement.innerHTML = '<span style="font-size: 2em;">🎉🥳</span><br>¡ENHORABUENA!<br>Has pronunciado correctamente<br>todas las frases.';
+                    document.getElementById('translation-text').textContent = '';
+                    recognizedTextElement.textContent = '';
+                    feedbackMessageElement.textContent = '';
+                    micButton.classList.add('hidden');
+                    nextButton.textContent = '¡Repetir con frases diferentes!';
+                    nextButton.disabled = false;
+                    nextButton.className = 'px-10 py-3 text-white font-bold rounded-full transition-colors duration-200 focus:outline-none shadow-lg bg-red-600 hover:bg-red-700';
+                    playFinalSound();
+                    nextButton.onclick = () => {
+                        prepararRonda();
+                        displayCurrentQuestion();
+                        nextButton.onclick = null;
+                    };
+                }
+            }
+
+            // ===== VERIFICAR RESPUESTA =====
+            function checkAnswer(userAnswer) {
+                const currentExercise = activeExercises[currentExerciseIndex];
+                const cleanedUser = limpiarTexto(userAnswer);
+                const isCorrect = currentExercise.correctAnswers.some(a => limpiarTexto(a) === cleanedUser);
+
+                if (isCorrect) {
+                    recognizedTextElement.textContent = currentExercise.correctAnswers[0];
+                    recognizedTextElement.classList.remove('text-red-600');
+                    recognizedTextElement.classList.add('text-green-600');
+                    showFeedback('¡Muy bien! ☺️', true);
+
+                    nextButton.textContent = 'Siguiente >';
+                    nextButton.disabled = false;
+                    nextButton.className = 'px-10 py-3 text-white font-bold rounded-full transition-colors duration-200 focus:outline-none shadow-lg bg-red-600 hover:bg-red-700';
+
+                    micButton.classList.add('hidden');
+                    playCorrectSound();
+                } else {
+                    recognizedTextElement.classList.remove('text-gray-700', 'text-green-600');
+                    recognizedTextElement.classList.add('text-red-600');
+                    showFeedback('No entiendo, repite por favor. 😕', false);
+                    micButton.innerHTML = `<span>Repite - Click</span><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>`;
+                    micButton.classList.add('repeat-bounce');
+                    playErrorSound();
+                }
+            }
+
+            // ===== FEEDBACK =====
+            function showFeedback(message, isCorrect) {
+                feedbackMessageElement.textContent = message;
+                feedbackMessageElement.className = isCorrect ? 'text-green-600 font-bold' : 'text-red-600 font-bold';
+            }
+
+            // ===== MODAL DE ERROR =====
+            function showErrorModal(errorType, errorDetails = '') {
+                const errorDetailsElement = document.getElementById('error-details');
+                const timestamp = new Date().toLocaleString('es-ES');
+                const dispositivo = /Mobile|Android|iPhone|iPad/.test(navigator.userAgent) ? 'Móvil' : 'Escritorio';
+                let errorMessage = '';
+                switch(errorType) {
+                    case 'no_speech_api':     errorMessage = `❌ API de voz no disponible\n⏰ ${timestamp}\n📱 ${dispositivo}\n\nSolución: Usa Chrome, Edge o Safari actualizado`; break;
+                    case 'permission_denied': errorMessage = `🚫 Permisos de micrófono denegados\n⏰ ${timestamp}\n📱 ${dispositivo}\n\nSolución: Permite el acceso al micrófono en el navegador`; break;
+                    case 'recognition_error': errorMessage = `⚠️ Error de reconocimiento\n🔍 Tipo: ${errorDetails}\n⏰ ${timestamp}\n📱 ${dispositivo}\n\nPrueba hablar más claro`; break;
+                    case 'start_error':       errorMessage = `🔴 Error al iniciar\n🔍 ${errorDetails}\n⏰ ${timestamp}\n📱 ${dispositivo}\n\nRecarga la página e intenta de nuevo`; break;
+                    default:                  errorMessage = `❓ Error desconocido\n🔍 ${errorDetails}\n⏰ ${timestamp}\n📱 ${dispositivo}`;
+                }
+                errorDetailsElement.textContent = errorMessage;
+                errorModal.classList.remove('hidden');
+                errorModal.classList.add('flex');
+            }
+
+            // ===== BOTÓN MICRÓFONO =====
+            micButton.addEventListener('click', () => {
+                if (!SpeechRecognition || !recognition) { showErrorModal('no_speech_api'); return; }
+                if (isRecognizing) {
+                    recognition.stop();
+                } else {
+                    if (currentExerciseIndex === 0 && feedbackMessageElement.textContent === '') registrarActividad('INICIADO');
+                    try {
+                        recognition.start();
+                        isRecognizing = true;
+                        micButton.classList.remove('bg-red-600', 'repeat-bounce');
+                        micButton.classList.add('bg-red-500', 'recording-pulse');
+                        micButton.disabled = true;
+                        micButton.textContent = 'HABLA - Estoy escuchando...';
+                        feedbackMessageElement.textContent = '';
+                        recognizedTextElement.textContent = '';
+                        recognizedTextElement.classList.remove('text-red-600', 'text-green-600');
+                        recognizedTextElement.classList.add('text-gray-700');
+                        playClickSound();
+                    } catch (e) { showErrorModal('start_error', e.message); }
+                }
+            });
+
+            // ===== BOTÓN AYUDA / SIGUIENTE =====
+            nextButton.addEventListener('click', () => {
+                if (nextButton.textContent === 'Ayuda') {
+                    const helpText = activeExercises[currentExerciseIndex].correctAnswers[0];
+                    recognizedTextElement.textContent = helpText;
+                    recognizedTextElement.classList.remove('text-red-600', 'text-gray-700');
+                    recognizedTextElement.classList.add('text-green-600');
+                    showFeedback('Así se pronuncia:', true);
+                    pronunciarFrase(helpText);
+                    micButton.classList.remove('hidden');
+                    micButton.innerHTML = `<span>Repite - Click</span><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>`;
+                    nextButton.disabled = true;
+                    nextButton.className = 'px-10 py-3 text-white font-bold rounded-full transition-colors duration-200 focus:outline-none shadow-lg bg-green-400 opacity-50 cursor-not-allowed';
+                } else if (nextButton.textContent === 'Siguiente >') {
+                    currentExerciseIndex++;
+                    displayCurrentQuestion();
+                } else if (nextButton.textContent === '¡Repetir con frases diferentes!') {
+                    prepararRonda();
+                    displayCurrentQuestion();
+                }
+            });
+
+            // ===== CERRAR MODAL =====
+            closeModalButton.addEventListener('click', () => {
+                errorModal.classList.remove('flex');
+                errorModal.classList.add('hidden');
+            });
+
+            // ===== INICIO =====
+            prepararRonda();
+            displayCurrentQuestion();
+        });
+    </script>
+</body>
+</html>
