@@ -90,6 +90,7 @@
 
         <div class='mt-4 mb-6 flex justify-center'>
             <button id='next-button' class='px-10 py-3 text-white font-bold rounded-full transition-colors duration-200 focus:outline-none shadow-lg bg-green-600 hover:bg-green-700'>Ayuda</button>
+            <button id='skip-button' class='hidden ml-3 px-5 py-3 text-gray-600 font-semibold rounded-full bg-gray-200 hover:bg-gray-300 focus:outline-none'>Saltar →</button>
         </div>
 
         <!-- FOOTER -->
@@ -480,7 +481,10 @@
 
             // ===== COMPARACIÓN =====
             function limpiarTexto(texto) {
-                return texto.trim().replace(/[.?!,;¿¡]/g, '').replace(/\s+/g, ' ').toLowerCase();
+                // Se ignoran las tildes (Google escribe "sí" aunque se diga "si"), incluida la de la ñ (año = ano)
+                return texto.trim().toLowerCase()
+                    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+                    .replace(/[.?!,;¿¡]/g, '').replace(/\s+/g, ' ').trim();
             }
 
             // ===== SONIDOS =====
@@ -517,6 +521,7 @@
             const recognizedTextElement  = document.getElementById('recognized-text');
             const feedbackMessageElement = document.getElementById('feedback-message');
             const nextButton             = document.getElementById('next-button');
+            const skipButton             = document.getElementById('skip-button');
             const errorModal             = document.getElementById('error-modal');
             const closeModalButton       = document.getElementById('close-modal');
             let recognition = null;
@@ -569,7 +574,22 @@
 
             function prepararRonda() {
                 shuffleArray(verbExercises);
-                activeExercises = verbExercises.slice(0, QUESTIONS_PER_ROUND);
+                // Una misma frase (aunque tenga huecos distintos) sale como máximo una vez por ronda
+                const vistas = new Set();
+                const elegidas = [];
+                verbExercises.forEach(ej => {
+                    const clave = limpiarTexto(ej.correctAnswers[0]);
+                    if (elegidas.length < QUESTIONS_PER_ROUND && !vistas.has(clave)) {
+                        vistas.add(clave);
+                        elegidas.push(ej);
+                    }
+                });
+                // Si el pool tiene menos frases distintas que preguntas por ronda, se completa con las que sobran
+                verbExercises.forEach(ej => {
+                    if (elegidas.length < QUESTIONS_PER_ROUND && !elegidas.includes(ej)) elegidas.push(ej);
+                });
+                shuffleArray(elegidas);
+                activeExercises = elegidas;
                 currentExerciseIndex = 0;
             }
 
@@ -590,6 +610,7 @@
                     feedbackMessageElement.textContent = '';
 
                     // Botón empieza como "Ayuda" activo
+                    skipButton.classList.add('hidden');
                     nextButton.textContent = 'Ayuda';
                     nextButton.disabled = false;
                     nextButton.className = 'px-10 py-3 text-white font-bold rounded-full transition-colors duration-200 focus:outline-none shadow-lg bg-green-600 hover:bg-green-700';
@@ -605,6 +626,7 @@
                     recognizedTextElement.textContent = '';
                     feedbackMessageElement.textContent = '';
                     micButton.classList.add('hidden');
+                    skipButton.classList.add('hidden');
                     nextButton.textContent = '¡Repetir con frases diferentes!';
                     nextButton.disabled = false;
                     nextButton.className = 'px-10 py-3 text-white font-bold rounded-full transition-colors duration-200 focus:outline-none shadow-lg bg-red-600 hover:bg-red-700';
@@ -630,6 +652,7 @@
                     showFeedback('¡Correcto! ☺️', true);
 
                     // Botón cambia a "Siguiente"
+                    skipButton.classList.add('hidden');
                     nextButton.textContent = 'Siguiente >';
                     nextButton.disabled = false;
                     nextButton.className = 'px-10 py-3 text-white font-bold rounded-full transition-colors duration-200 focus:outline-none shadow-lg bg-red-600 hover:bg-red-700';
@@ -704,9 +727,8 @@
                     pronunciarFrase(helpText);
                     micButton.classList.remove('hidden');
                     micButton.innerHTML = `<span>Repite - Click</span><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>`;
-                    // Desactivar ayuda hasta que repita correctamente
-                    nextButton.disabled = true;
-                    nextButton.className = 'px-10 py-3 text-white font-bold rounded-full transition-colors duration-200 focus:outline-none shadow-lg bg-green-400 opacity-50 cursor-not-allowed';
+                    // Ayuda sigue activa (se puede usar todas las veces); aparece "Saltar"
+                    skipButton.classList.remove('hidden');
                 } else if (nextButton.textContent === 'Siguiente >') {
                     currentExerciseIndex++;
                     displayCurrentQuestion();
@@ -714,6 +736,12 @@
                     prepararRonda();
                     displayCurrentQuestion();
                 }
+            });
+
+            // ===== BOTÓN SALTAR =====
+            skipButton.addEventListener('click', () => {
+                currentExerciseIndex++;
+                displayCurrentQuestion();
             });
 
             // ===== CERRAR MODAL =====
